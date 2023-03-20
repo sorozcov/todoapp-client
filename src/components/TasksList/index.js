@@ -1,11 +1,16 @@
+/* eslint-disable eqeqeq */
 import { useEffect, useState } from 'react';
-import { Row } from 'react-bootstrap';
+import { Row ,Modal,Button} from 'react-bootstrap';
 import TaskCard from '../TaskCard';
 import TaskEdit from '../TaskEdit';
 import { BASE_API_URL } from '../../constants';
+import AlertToast from '../AlertToast';
 
 function TasksList() {
   const [tasksList,setTasksList] = useState([])
+  const [showAlert,setShowAlert] = useState(false)
+  const [messageAlert,setMessageAlert] = useState({variant:'success',message:''})
+  const [deleteTaskId,setDeleteTaskId] = useState(null)
 
   //Fetch task list on mount or refresh
   useEffect(()=>{
@@ -36,14 +41,15 @@ function TasksList() {
               if(result.status==200){
                 result = await result.json()  
                 setTasksList([...tasksList,result])
-                //TODO Change alerts to something more beautiful
-                alert("New task created.");
+                setShowAlert(true)
+                setMessageAlert({message:"New task created correctly.",variant:'success'})
               }else{
                 throw new Error("Error creating")
               }
           
         }catch(e){
-            alert("New task was not created.");
+            setShowAlert(true)
+            setMessageAlert({message:"New task was not created.",variant:'danger'});
 
         }
   }
@@ -60,14 +66,16 @@ function TasksList() {
               result = await result.json()  
               let index_updated = tasksList.findIndex((task)=>task._id==_id)
               setTasksList([...tasksList.slice(0,index_updated),result,...tasksList.slice(index_updated+1)])
-              //TODO Change alerts to something more beautiful
-              alert(`Task ${_id} was updated.`);
+              setShowAlert(true)
+              setMessageAlert({message:`Task ${_id} was updated correctly.`,variant:'success'})
             }else{
               throw new Error("Error updating")
             }
         
       }catch(e){
-        alert(`Task ${_id} was not updated.`);
+        
+        setShowAlert(true)
+        setMessageAlert({message:`Task ${_id} was not updated.`,variant:'danger'})
 
       }
 }
@@ -85,35 +93,56 @@ function TasksList() {
         result = await result.json()  
         console.log(result)
         setTasksList([...tasksList.filter(task=>task._id!==_id)])
-        alert("Task was deleted.");
+        setShowAlert(true)
+        setMessageAlert({message:`Task ${_id} was deleted correctly.`,variant:'success'})
+        setDeleteTaskId(null)
       }else{
         throw new Error("Error deleting")
       }
   }catch(e){
-      console.log(e)
-      alert("Task was deleted.");
-
+      setShowAlert(true)
+      setMessageAlert({message:`Task ${_id} was not deleted.`,variant:'danger'})
+      setDeleteTaskId(null)
   }
   }
 
   
   return (
+      <>
+        <AlertToast message={messageAlert.message} showAlert={showAlert} setShowAlert={setShowAlert} variant={messageAlert.variant}/>
+        
+        <div style={{marginLeft:'2vw',marginRight:'2vw',marginBottom:'3vh'}}>
+            <TaskEdit handleAddTask={handleAddTask} />
+            <Row xs={1} md={2} className="g-4" style={{marginTop:'0.5vh'}}>
+                {
+                    tasksList.map(
+                        task=>{
+                            return (<TaskCard key={task._id} {...task} 
+                                handleEditTask={handleEditTask}
+                                handleDeleteTask={()=>{setDeleteTaskId(task._id)}} 
+                                />)
+                        }
+                    )
+                }
+            </Row>
+            
+        </div>
 
-      <div style={{marginLeft:'2vw',marginRight:'2vw',marginBottom:'3vh'}}>
-          <TaskEdit handleAddTask={handleAddTask} />
-          <Row xs={1} md={2} className="g-4" style={{marginTop:'0.5vh'}}>
-              {
-                  tasksList.map(
-                      task=>{
-                          return (<TaskCard key={task._id} {...task} 
-                            handleEditTask={handleEditTask}
-                            handleDeleteTask={()=>handleDeleteTask(task._id)} 
-                            />)
-                      }
-                  )
-              }
-          </Row>
-      </div>
+        <Modal show={deleteTaskId!=null} onHide={()=>{setDeleteTaskId(null)}}>
+            <Modal.Header closeButton>
+            <Modal.Title>Are you sure you want to delete this task?</Modal.Title>
+            </Modal.Header>
+            {/* <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body> */}
+            <Modal.Footer>
+            <Button variant="secondary" onClick={()=>{setDeleteTaskId(null)}}>
+                Cancel
+            </Button>
+            <Button variant="danger" onClick={()=>{handleDeleteTask(deleteTaskId)}}>
+                Delete
+            </Button>
+            </Modal.Footer>
+        </Modal>
+    </>
   );
 }
 
