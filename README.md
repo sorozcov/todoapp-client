@@ -1,3 +1,6 @@
+# About the project 
+This is a Client with React for Todo Application List with basic CRUD Operations
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
