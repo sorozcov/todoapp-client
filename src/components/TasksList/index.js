@@ -132,7 +132,7 @@ function TasksList() {
             <Modal.Header closeButton>
             <Modal.Title>Are you sure you want to delete this task?</Modal.Title>
             </Modal.Header>
-            {/* <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body> */}
+            <Modal.Body>{tasksList.filter(task=>task._id==deleteTaskId).map(task=>`${task._id}: ${task.taskName}`).join("")}</Modal.Body>
             <Modal.Footer>
             <Button variant="secondary" onClick={()=>{setDeleteTaskId(null)}}>
                 Cancel
